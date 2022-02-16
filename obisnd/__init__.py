@@ -11,7 +11,6 @@ logger.addHandler(logging.NullHandler())
 load_dotenv()
 
 
-
 def obis_has_dataset(obis_datasets, obis_blacklist, identifiers):
     for identifier in identifiers:
         if identifier in obis_datasets:
