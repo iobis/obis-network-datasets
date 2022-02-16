@@ -26,7 +26,7 @@ def parse_issue_body(body):
 
 
 def get_github_issues():
-    res = session.get(url="https://api.github.com/repos/iobis/obis-network-datasets/issues?state=all")
+    res = session.get(url="https://api.github.com/repos/iobis/obis-network-datasets/issues?state=all&labels=dataset")
     issues = res.json()
     for issue in issues:
         issue["body"] = parse_issue_body(issue["body"])
@@ -43,7 +43,8 @@ def create_github_issue(gbif_dataset, identifiers):
     ]
     data = {
         "title": gbif_dataset["title"],
-        "body": yaml.dump(props)
+        "body": yaml.dump(props),
+        "labels": ["dataset"]
     }
     res = session.post("https://api.github.com/repos/iobis/obis-network-datasets/issues", json.dumps(data))
     logger.info("Created GitHub issue")
