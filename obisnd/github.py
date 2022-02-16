@@ -2,7 +2,6 @@ from venv import create
 import requests
 import re
 import os
-from requests.auth import HTTPDigestAuth
 import logging
 import yaml
 from obisnd.gbif import create_gbif_url
@@ -27,7 +26,7 @@ def parse_issue_body(body):
 
 
 def get_github_issues():
-    res = session.get(url="https://api.github.com/repos/iobis/obis-network-datasets/issues")
+    res = session.get(url="https://api.github.com/repos/iobis/obis-network-datasets/issues?state=all")
     issues = res.json()
     for issue in issues:
         issue["body"] = parse_issue_body(issue["body"])
@@ -35,7 +34,6 @@ def get_github_issues():
 
 
 def create_github_issue(gbif_dataset, identifiers):
-    auth = HTTPDigestAuth(os.getenv("GITHUB_USER"), os.getenv("GITHUB_ACCESS_TOKEN"))
     url = create_gbif_url(gbif_dataset["key"])
     props = [
         { "title": gbif_dataset["title"] },
