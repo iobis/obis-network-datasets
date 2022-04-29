@@ -1,0 +1,19 @@
+name: run
+
+on:
+  push:
+  schedule:
+    - cron: '30 11 * * *'
+
+jobs:
+  build-list:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Run
+        run: |
+          python -m obisnd

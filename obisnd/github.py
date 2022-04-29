@@ -1,4 +1,3 @@
-from venv import create
 import requests
 import re
 import os
@@ -6,6 +5,10 @@ import logging
 import yaml
 from obisnd.gbif import create_gbif_url
 import json
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 logger = logging.getLogger("obisnd")
@@ -47,4 +50,5 @@ def create_github_issue(gbif_dataset, identifiers):
         "labels": ["dataset"]
     }
     res = session.post("https://api.github.com/repos/iobis/obis-network-datasets/issues", json.dumps(data))
+    logger.info(f"Status code: {res.status_code}")
     logger.info("Created GitHub issue")
