@@ -10,14 +10,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 logger = logging.getLogger("obisnd")
+
 session = requests.Session()
-session.auth = (os.getenv("GITHUB_USER"), os.getenv("GITHUB_ACCESS_TOKEN"))
 session.headers.update({
     "User-Agent": "iobis/obis-network-datasets",
     "Accept": "application/vnd.github.v3+json"
 })
+
+token = os.getenv("GITHUB_TOKEN")
+if token:
+    logger.info("Adding token")
+    session.headers.update({
+        "Authorization": f"Bearer {token}"
+    })
+else:
+    user = os.getenv("GITHUB_USER")
+    access_token = os.getenv("GITHUB_ACCESS_TOKEN")
+    logger.info("Authenticating as f{user}")
+    session.auth = (user, access_token)
 
 
 def parse_issue_body(body):
