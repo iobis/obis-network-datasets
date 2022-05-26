@@ -1,4 +1,9 @@
 import logging
+logging_level = logging.INFO
+logging_fmt = "%(asctime)s-%(levelname)4.4s-%(name)6.6s-%(message)s"
+date_fmt = "%Y-%m-%d %H:%M:%S"
+logging.basicConfig(level=logging_level, format=logging_fmt, datefmt=date_fmt)
+
 from obisnd.gbif import get_obis_network_datasets, create_gbif_url
 from obisnd.obis import get_obis_datasets, get_obis_blacklist
 from obisnd.github import get_github_issues, create_github_issue
@@ -6,8 +11,7 @@ from termcolor import colored
 from dotenv import load_dotenv
 
 
-logger = logging.getLogger("obisnd")
-logger.addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 

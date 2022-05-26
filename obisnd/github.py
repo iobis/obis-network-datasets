@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-
-logger = logging.getLogger("obisnd")
+logger = logging.getLogger(__name__)
 
 session = requests.Session()
 session.headers.update({
@@ -20,15 +19,12 @@ session.headers.update({
 
 token = os.getenv("GITHUB_TOKEN")
 if token:
-    logger.info("Adding token")
+    logger.info(f"Adding token *****{token[36:]}")
     session.headers.update({
         "Authorization": f"Bearer {token}"
     })
 else:
-    user = os.getenv("GITHUB_USER")
-    access_token = os.getenv("GITHUB_ACCESS_TOKEN")
-    logger.info("Authenticating as f{user}")
-    session.auth = (user, access_token)
+    logger.error("No token found")
 
 
 def parse_issue_body(body):
