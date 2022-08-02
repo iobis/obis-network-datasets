@@ -49,7 +49,7 @@ def run():
             logger.info(colored(f"No IPT URL found for {gbif_url}", "red"))
         else:
             if not obis_has_dataset(obis_datasets, obis_blacklist, identifiers):
-                logger.info(colored(f"Dataset not in OBIS: {gbif_url}", "green"))
+                logger.info(colored(f"Dataset not in OBIS: {gbif_url}", "blue"))
                 if not github_has_issue(github_issues, identifiers):
                     logger.info(colored(f"Dataset not in GitHub: {gbif_url}", "green"))
 

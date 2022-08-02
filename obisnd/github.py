@@ -36,10 +36,17 @@ def parse_issue_body(body):
 
 
 def get_github_issues():
-    res = session.get(url="https://api.github.com/repos/iobis/obis-network-datasets/issues?state=all&labels=dataset")
-    issues = res.json()
-    for issue in issues:
-        issue["body"] = parse_issue_body(issue["body"])
+    page = 1
+    issues = []
+    while True:
+        res = session.get(url=f"https://api.github.com/repos/iobis/obis-network-datasets/issues?state=all&labels=dataset&page={page}")
+        issues_page = res.json()
+        if len(issues_page) == 0:
+            break
+        for issue in issues_page:
+            issue["body"] = parse_issue_body(issue["body"])
+        issues = issues + issues_page
+        page = page + 1
     return(issues)
 
 
