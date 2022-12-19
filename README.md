@@ -10,6 +10,7 @@ The OBIS secretariat will list those marine datasets that are not yet in OBIS as
 
 GitHub accounts per OBIS node used to assign datasets:
 - AntOBIS: @ymgan
+- IndOBIS: @johnny3125
 
 ## Run
 
