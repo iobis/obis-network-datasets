@@ -8,6 +8,9 @@ Datasets that are added to the OBIS network appear here: https://www.gbif.org/ne
 
 The OBIS secretariat will list those marine datasets that are not yet in OBIS as issues to this GitHub repository and indicate which OBIS node(s) should endorse this dataset. Once endorsed, OBIS will harvest the dataset directly from the source IPT and list it on the OBIS node page.
 
+GitHub accounts per OBIS node used to assign datasets:
+- AntOBIS: @ymgan
+
 ## Run
 
 Create `.env` with environment variables `GITHUB_USER` and `GITHUB_ACCESS_TOKEN`.
