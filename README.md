@@ -12,6 +12,7 @@ GitHub accounts per OBIS node used to assign datasets:
 - AntOBIS: @ymgan
 - IndOBIS: @johnny3125
 - Caribbean OBIS: @diodon
+- OBIS Japan: @hosonot
 
 ## Run
 
