@@ -20,7 +20,7 @@ GitHub accounts per OBIS node used to assign datasets:
 
 ## Run
 
-Create `.env` with environment variables `GITHUB_USER` and `GITHUB_ACCESS_TOKEN`.
+Create `.env` file with environment variables `GITHUB_USER` and `GITHUB_ACCESS_TOKEN`.
 
 ```
 python -m obisnd
