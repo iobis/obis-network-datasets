@@ -18,6 +18,7 @@ GitHub accounts per OBIS node used to assign datasets:
 - OBIS Deepsea: @haniehsaeedi
 - AfrOBIS: @TRasehlomi
 - OBIS China: @ZhaocuiMeng
+- OBIS Canada: @cornthwaitem
 
 ## Run
 
