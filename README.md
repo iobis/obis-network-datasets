@@ -20,6 +20,7 @@ GitHub accounts per OBIS node used to assign datasets:
 - OBIS China: @ZhaocuiMeng
 - OBIS Canada: @cornthwaitem
 - OBIS UK: @dblear
+- Ocean Tracking Network: @jdpye
 
 ## Run
 
