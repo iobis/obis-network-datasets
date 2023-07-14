@@ -27,7 +27,7 @@ def obis_has_dataset(obis_datasets, obis_blacklist, identifiers):
 def github_has_issue(github_issues, identifiers):
     for identifier in identifiers:
         for issue in github_issues:
-            if "URLs" in issue["body"]:
+            if issue["body"] is not None and "URLs" in issue["body"]:
                 for url in issue["body"]["URLs"]:
                     if identifier == url:
                         return(True)

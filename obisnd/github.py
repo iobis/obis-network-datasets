@@ -31,6 +31,8 @@ def parse_issue_body(body):
     lines = [item.strip() for item in re.split("[\r\n]+-", body)]
     props = [[re.sub("-\s+", "", s.strip()) for s in line.split(":", 1)] for line in lines]
     props_dict = { prop[0]: prop[1] for prop in props }
+    if "URLs" not in props_dict:
+        return(None)
     props_dict["URLs"] = [url.strip() for url in props_dict["URLs"].splitlines()]
     return(props_dict)
 
