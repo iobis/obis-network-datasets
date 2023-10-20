@@ -60,7 +60,12 @@ class ObisNetworkDatasets:
     def run(self, dry_run=False):
         for gbif_dataset in self.gbif_datasets:
             gbif_url = create_gbif_url(gbif_dataset["key"])
+
             identifiers = [identifier["identifier"] for identifier in gbif_dataset["identifiers"]]
+            if gbif_dataset["doi"] is not None:
+                doi_url = self.normalize_identifier(gbif_dataset["doi"])
+                if doi_url not in identifiers:
+                    identifiers.append(doi_url)
 
             if not self.dataset_has_dwc_endpoint(gbif_dataset):
                 logger.info(colored(f"No IPT URL found for {gbif_url}", "red"))
