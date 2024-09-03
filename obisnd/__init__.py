@@ -58,6 +58,9 @@ class ObisNetworkDatasets:
         return False
 
     def run(self, dry_run=False):
+
+        count_new = 0
+
         for gbif_dataset in self.gbif_datasets:
             gbif_url = create_gbif_url(gbif_dataset["key"])
 
@@ -76,6 +79,9 @@ class ObisNetworkDatasets:
                         logger.info(colored(f"Dataset is not orphaned: {gbif_url}", "blue"))
                         if not self.github_has_issue(identifiers):
                             logger.info(colored(f"Dataset not in GitHub: {gbif_url}", "green"))
+                            count_new = count_new + 1
 
                             if not dry_run:
                                 create_github_issue(gbif_dataset, identifiers)
+
+        logger.info(colored(f"New datasets: {count_new}", "green"))
