@@ -23,6 +23,8 @@ GitHub accounts per OBIS node used to assign datasets:
 - OBIS UK: @dblear
 - Ocean Tracking Network: @jdpye
 
+To view all issues which are not currently assigned to a node, [use this filter](https://github.com/iobis/obis-network-datasets/issues?q=is%3Aissue%20state%3Aopen%20no%3Aassignee%20label%3Adataset%20-label%3A%22node%3A%20Caribbean%20OBIS%22%20-label%3A%22node%3A%20EurOBIS%22%20-label%3A%22node%3A%20OBIS%20CPPS%22%20-label%3A%22node%3A%20OBIS%20Ecuador%22%20-label%3A%22node%3A%20OBIS%20Norway%22%20-label%3A%22node%3A%20OBIS%20UK%22%20-label%3A%22node%3A%20OBIS%20USA%22%20-label%3A%22node%3A%20SWP%20OBIS%22).
+
 ## Run
 
 Create `.env` file with environment variables `GITHUB_USER` and `GITHUB_ACCESS_TOKEN`.
