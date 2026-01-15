@@ -49,6 +49,22 @@ GitHub accounts per OBIS node used to assign datasets:
 
 To view all open issues **not currently assigned to a node**, use [this filter](https://github.com/iobis/obis-network-datasets/issues?q=is%3Aissue%20state%3Aopen%20no%3Aassignee%20label%3Adataset%20-label%3A%22node%3A%20OBIS%20China%22%20-label%3A%22node%3A%20OBIS%20SEAMAP%22%20-label%3A%22node%3A%20OBIS%20Colombia%22%20-label%3A%22node%3A%20OBIS%20Malaysia%22%20-label%3A%22node%3A%20OBIS%20Deep%20Sea%22%20%20-label%3A%22node%3A%20OBIS%20Brazil%22%20-label%3A%22node%3A%20OBIS%20Argentina%22%20-label%3A%22node%3A%20OBIS%20Australia%22%20-label%3A%22node%3A%20ESP%20OBIS%22%20-label%3A%22node%3A%20OBIS%20Black%20Sea%22%20-label%3A%22node%3A%20Caribbean%20OBIS%22%20-label%3A%22node%3A%20AfroOBIS%22%20-label%3A%22node%3A%20EurOBIS%22%20-label%3A%22node%3A%20OBIS%20CPPS%22%20-label%3A%22node%3A%20OBIS%20Ecuador%22%20-label%3A%22node%3A%20OBIS%20Norway%22%20-label%3A%22node%3A%20OBIS%20UK%22%20-label%3A%22node%3A%20OBIS%20USA%22%20-label%3A%22node%3A%20SWP%20OBIS%22).  
 
+## Automated checking for publication
+
+To help keep the repo up-to-date, a GitHub Action that runs weekly to check if datasets in open issues already exist in OBIS.
+
+**What it does:**
+- Scans open issues for dataset titles and URLs
+- Queries the OBIS API for exact title matches
+- Compares source URLs between the issue and OBIS
+
+**Results:**
+- **Exact match (title + URL)**: Adds "In OBIS" label, comments with OBIS link, and closes the issue
+- **Title match only**: Adds a warning comment showing URL mismatch (issue stays open)
+- **No match**: No action taken
+
+**Schedule:** Runs automatically every Sunday at midnight UTC, or can be triggered manually via the Actions tab.
+
 ## Python Package  
 
 This repository also includes the Python package that creates issues for datasets linked to the OBIS network in the GBIF registry.  
