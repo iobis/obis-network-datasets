@@ -2,16 +2,113 @@ import os
 import requests
 from github import Github
 import time
+import re
+import sys
 
-def search_obis_dataset(dataset_title):
+# DRY RUN MODE - set to True to test without making any changes
+DRY_RUN = os.environ.get('DRY_RUN', 'false').lower() == 'true'
+
+def extract_urls_from_issue(issue_body):
     """
-    Search for a dataset in OBIS using exact title match
-    Returns: (found: bool, dataset_url: str or None)
+    Extract all URLs from the issue body
+    """
+    if not issue_body:
+        return []
+    
+    # Find all URLs in the issue body
+    url_pattern = r'https?://[^\s<>"\')]+|www\.[^\s<>"\')]+'
+    urls = re.findall(url_pattern, issue_body)
+    
+    # Also extract UUIDs that might be GBIF dataset IDs
+    uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    uuids = re.findall(uuid_pattern, issue_body, re.IGNORECASE)
+    
+    # Add GBIF dataset URLs for found UUIDs
+    for uuid in uuids:
+        urls.append(f"https://www.gbif.org/dataset/{uuid}")
+    
+    return list(set(urls))  # Remove duplicates
+
+def get_obis_dataset_info(dataset_id):
+    """
+    Get full dataset information from OBIS API
+    """
+    url = f"https://api.obis.org/dataset/{dataset_id}"
+    
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f"  Error fetching dataset info: {e}")
+        return None
+
+def check_url_match(issue_urls, obis_dataset_info):
+    """
+    Check if any URLs from the issue match the OBIS dataset's URLs
+    Returns: (match: bool, obis_urls: list)
+    """
+    if not obis_dataset_info:
+        return False, []
+    
+    # Get OBIS dataset URLs
+    obis_urls = []
+    
+    if 'url' in obis_dataset_info and obis_dataset_info['url']:
+        obis_urls.append(obis_dataset_info['url'])
+    
+    if 'feed' in obis_dataset_info and obis_dataset_info['feed']:
+        obis_urls.append(obis_dataset_info['feed'])
+    
+    if 'archive' in obis_dataset_info and obis_dataset_info['archive']:
+        obis_urls.append(obis_dataset_info['archive'])
+    
+    # Normalize URLs for comparison
+    def normalize_url(url):
+        url = url.lower()
+        url = url.replace('https://', '').replace('http://', '')
+        url = url.rstrip('/')
+        return url
+    
+    def extract_resource_id(url):
+        """Extract the resource ID from IPT URLs (e.g., ?r=dataset_name)"""
+        match = re.search(r'[?&]r=([^&]+)', url)
+        return match.group(1) if match else None
+    
+    # Try exact matches first
+    normalized_issue_urls = [normalize_url(url) for url in issue_urls]
+    normalized_obis_urls = [normalize_url(url) for url in obis_urls if url]
+    
+    for issue_url in normalized_issue_urls:
+        for obis_url in normalized_obis_urls:
+            # Exact match (ignoring protocol)
+            if issue_url == obis_url:
+                return True, obis_urls
+            
+            # One contains the other (for partial URLs)
+            if issue_url in obis_url or obis_url in issue_url:
+                return True, obis_urls
+    
+    # Also check if they share the same IPT resource ID
+    for issue_url in issue_urls:
+        issue_resource = extract_resource_id(issue_url)
+        if issue_resource:
+            for obis_url in obis_urls:
+                obis_resource = extract_resource_id(obis_url)
+                if obis_resource and issue_resource.lower() == obis_resource.lower():
+                    return True, obis_urls
+    
+    return False, obis_urls
+
+def search_obis_dataset(dataset_title, issue_urls):
+    """
+    Search for a dataset in OBIS using exact title match and URL verification
+    Returns: (title_match: bool, url_match: bool, dataset_url: str or None, obis_urls: list)
     """
     url = "https://api.obis.org/dataset/search2"
     params = {
         'q': dataset_title,
-        'size': 20  # Get more results to check for exact matches
+        'size': 20
     }
     
     try:
@@ -26,15 +123,27 @@ def search_obis_dataset(dataset_title):
                     dataset_id = result.get('id')
                     if dataset_id:
                         dataset_url = f"https://obis.org/dataset/{dataset_id}"
-                        return True, dataset_url
+                        
+                        # Get full dataset info to check URLs
+                        dataset_info = get_obis_dataset_info(dataset_id)
+                        
+                        # Check if URLs match
+                        url_match, obis_urls = check_url_match(issue_urls, dataset_info)
+                        
+                        return True, url_match, dataset_url, obis_urls
         
-        return False, None
+        return False, False, None, []
         
     except Exception as e:
-        print(f"Error searching OBIS for '{dataset_title}': {e}")
-        return None, None
+        print(f"  Error searching OBIS: {e}")
+        return None, None, None, []
 
 def main():
+    if DRY_RUN:
+        print("=" * 60)
+        print("🔍 DRY RUN MODE - No changes will be made to GitHub")
+        print("=" * 60)
+    
     # Initialize GitHub client
     github_token = os.environ.get('GITHUB_TOKEN')
     if not github_token:
@@ -46,67 +155,138 @@ def main():
     # Get the repository
     repo = g.get_repo("iobis/obis-network-datasets")
     
-    # Ensure the label exists
-    try:
-        repo.get_label("In OBIS")
-        print("Label 'In OBIS' exists")
-    except:
-        print("Creating label 'In OBIS'")
-        repo.create_label("In OBIS", "1d76db", "Dataset already exists in OBIS")
+    # Ensure the label exists (only if not dry run)
+    if not DRY_RUN:
+        try:
+            repo.get_label("In OBIS")
+            print("Label 'In OBIS' exists")
+        except:
+            print("Creating label 'In OBIS'")
+            repo.create_label("In OBIS", "1d76db", "Dataset already exists in OBIS")
     
-    # Get all open issues
-    open_issues = repo.get_issues(state='open')
+    # Get all open issues only
+    print("Fetching open issues...")
+    open_issues = list(repo.get_issues(state='open'))
+    
+    # Filter out pull requests
+    open_issues = [issue for issue in open_issues if not issue.pull_request]
+    
+    print(f"Found {len(open_issues)} open issues (excluding PRs)\n")
     
     checked_count = 0
-    found_count = 0
+    full_match_count = 0
+    title_only_match_count = 0
     
     for issue in open_issues:
         # Skip if already labeled as "In OBIS"
         label_names = [label.name for label in issue.labels]
         if "In OBIS" in label_names:
-            print(f"Skipping issue #{issue.number} (already labeled)")
+            print(f"Skipping issue #{issue.number} (already labeled 'In OBIS')")
+            continue
+        
+        # Double-check issue is actually open
+        if issue.state != 'open':
+            print(f"Skipping issue #{issue.number} (not open: {issue.state})")
             continue
         
         dataset_title = issue.title
-        print(f"Checking issue #{issue.number}: {dataset_title}")
+        print(f"\n{'='*60}")
+        print(f"Issue #{issue.number}: {dataset_title}")
+        print(f"{'='*60}")
         
-        # Search OBIS for exact match
-        found, dataset_url = search_obis_dataset(dataset_title)
+        # Extract URLs from issue body
+        issue_urls = extract_urls_from_issue(issue.body)
+        print(f"Found {len(issue_urls)} URLs in issue:")
+        for u in issue_urls:
+            print(f"  - {u}")
         
-        if found is True:
-            found_count += 1
-            print(f"  ✓ Found exact match in OBIS: {dataset_url}")
-            
-            # Check if we've already commented about this
-            existing_comments = [c for c in issue.get_comments() 
-                               if 'The dataset is in OBIS:' in c.body]
-            
-            if not existing_comments:
-                # Add comment
-                comment_body = f"The dataset is in OBIS: {dataset_url}"
-                issue.create_comment(comment_body)
-                print(f"  ✓ Added comment")
+        # Search OBIS for exact match with URL verification
+        title_match, url_match, dataset_url, obis_urls = search_obis_dataset(dataset_title, issue_urls)
+        
+        if title_match is True:
+            if url_match:
+                # Full match - title and URL
+                full_match_count += 1
+                print(f"\n✓ FULL MATCH: Title and URL match!")
+                print(f"  OBIS Dataset: {dataset_url}")
+                print(f"  OBIS URLs:")
+                for u in obis_urls:
+                    print(f"    - {u}")
+                
+                if DRY_RUN:
+                    print(f"\n  [DRY RUN] Would add comment: 'The dataset is in OBIS: {dataset_url}'")
+                    print(f"  [DRY RUN] Would add label: 'In OBIS'")
+                else:
+                    # Check if we've already commented
+                    existing_comments = [c for c in issue.get_comments() 
+                                       if 'The dataset is in OBIS:' in c.body]
+                    
+                    if not existing_comments:
+                        comment_body = f"The dataset is in OBIS: {dataset_url}"
+                        issue.create_comment(comment_body)
+                        print(f"  ✓ Added comment")
+                    else:
+                        print(f"  ℹ Already commented")
+                    
+                    # Add label
+                    issue.add_to_labels("In OBIS")
+                    print(f"  ✓ Added 'In OBIS' label")
             else:
-                print(f"  ℹ Already commented")
-            
-            # Add label
-            issue.add_to_labels("In OBIS")
-            print(f"  ✓ Added 'In OBIS' label")
-            
-        elif found is False:
-            print(f"  ✗ Not found in OBIS")
+                # Title match only - no URL match
+                title_only_match_count += 1
+                print(f"\n⚠ PARTIAL MATCH: Title matches but URLs don't match")
+                print(f"  OBIS Dataset: {dataset_url}")
+                print(f"  Issue URLs:")
+                for u in issue_urls:
+                    print(f"    - {u}")
+                print(f"  OBIS URLs:")
+                for u in obis_urls:
+                    print(f"    - {u}")
+                
+                if DRY_RUN:
+                    print(f"\n  [DRY RUN] Would add comment about title match but no URL match")
+                    print(f"  [DRY RUN] Would NOT add 'In OBIS' label")
+                else:
+                    # Check if we've already commented
+                    existing_comments = [c for c in issue.get_comments() 
+                                       if 'title matches a dataset in OBIS' in c.body]
+                    
+                    if not existing_comments:
+                        comment_body = f"""⚠️ The title matches a dataset in OBIS, but the source URLs don't match:
+
+**OBIS Dataset:** {dataset_url}
+
+**Issue URLs:**
+{chr(10).join(f'- {u}' for u in issue_urls)}
+
+**OBIS URLs:**
+{chr(10).join(f'- {u}' for u in obis_urls)}
+
+Please verify if this is the same dataset or a different dataset with the same name."""
+                        issue.create_comment(comment_body)
+                        print(f"  ✓ Added warning comment")
+                    else:
+                        print(f"  ℹ Already commented")
+        
+        elif title_match is False:
+            print(f"\n✗ No title match found in OBIS")
         else:
-            print(f"  ⚠ Error checking OBIS")
+            print(f"\n⚠ Error checking OBIS")
         
         checked_count += 1
         
-        # Rate limiting - be respectful to the API
+        # Rate limiting
         time.sleep(1)
     
-    print(f"\n{'='*50}")
-    print(f"Summary: Checked {checked_count} issues")
-    print(f"Found {found_count} datasets already in OBIS")
-    print(f"{'='*50}")
+    print(f"\n{'='*60}")
+    print(f"SUMMARY")
+    print(f"{'='*60}")
+    print(f"Checked: {checked_count} open issues")
+    print(f"Full matches (title + URL): {full_match_count}")
+    print(f"Partial matches (title only): {title_only_match_count}")
+    if DRY_RUN:
+        print(f"\n🔍 DRY RUN - No actual changes were made")
+    print(f"{'='*60}")
 
 if __name__ == "__main__":
     main()
