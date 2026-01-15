@@ -31,46 +31,27 @@ def extract_urls_from_issue(issue_body):
 
 def check_url_match_simple(issue_urls, obis_urls):
     """
-    Check if any URLs from the issue match the OBIS URLs
+    Check if any URLs from the issue match the OBIS URLs exactly (ignoring http/https)
     Returns: bool
     """
     if not obis_urls:
         return False
     
-    # Normalize URLs for comparison
+    # Normalize URLs - only remove protocol difference
     def normalize_url(url):
-        url = url.lower()
-        url = url.replace('https://', '').replace('http://', '')
-        url = url.rstrip('/')
+        url = url.strip()
+        if url.startswith('https://'):
+            url = url.replace('https://', 'http://', 1)
         return url
     
-    def extract_resource_id(url):
-        """Extract the resource ID from IPT URLs (e.g., ?r=dataset_name)"""
-        match = re.search(r'[?&]r=([^&]+)', url)
-        return match.group(1) if match else None
-    
-    # Try exact matches first
+    # Normalize all URLs
     normalized_issue_urls = [normalize_url(url) for url in issue_urls]
-    normalized_obis_urls = [normalize_url(url) for url in obis_urls if url]
+    normalized_obis_urls = [normalize_url(url) for url in obis_urls]
     
+    # Check for exact matches
     for issue_url in normalized_issue_urls:
-        for obis_url in normalized_obis_urls:
-            # Exact match (ignoring protocol)
-            if issue_url == obis_url:
-                return True
-            
-            # One contains the other (for partial URLs)
-            if issue_url in obis_url or obis_url in issue_url:
-                return True
-    
-    # Also check if they share the same IPT resource ID
-    for issue_url in issue_urls:
-        issue_resource = extract_resource_id(issue_url)
-        if issue_resource:
-            for obis_url in obis_urls:
-                obis_resource = extract_resource_id(obis_url)
-                if obis_resource and issue_resource.lower() == obis_resource.lower():
-                    return True
+        if issue_url in normalized_obis_urls:
+            return True
     
     return False
 
@@ -96,7 +77,7 @@ def search_obis_dataset(dataset_title, issue_urls):
         data = response.json()
         
         if data and 'results' in data:
-            for result in data['results']:
+            for idx, result in enumerate(data['results']):
                 # Get title safely
                 result_title = result.get('title')
                 
@@ -110,14 +91,20 @@ def search_obis_dataset(dataset_title, issue_urls):
                     if dataset_id:
                         dataset_url = f"https://obis.org/dataset/{dataset_id}"
                         
-                        # Get URLs directly from the search result
+                        # Get URLs directly from the search result, validating they are strings
                         obis_urls = []
-                        if result.get('url'):
-                            obis_urls.append(result['url'])
-                        if result.get('feed'):
-                            obis_urls.append(result['feed'])
-                        if result.get('archive'):
-                            obis_urls.append(result['archive'])
+                        
+                        url_value = result.get('url')
+                        if url_value and isinstance(url_value, str):
+                            obis_urls.append(url_value)
+                        
+                        feed_value = result.get('feed')
+                        if feed_value and isinstance(feed_value, str):
+                            obis_urls.append(feed_value)
+                        
+                        archive_value = result.get('archive')
+                        if archive_value and isinstance(archive_value, str):
+                            obis_urls.append(archive_value)
                         
                         # Check if URLs match
                         url_match = check_url_match_simple(issue_urls, obis_urls)
@@ -128,8 +115,8 @@ def search_obis_dataset(dataset_title, issue_urls):
         
     except Exception as e:
         print(f"  Error searching OBIS: {e}")
-        print(f"  dataset_title type: {type(dataset_title)}")
-        print(f"  dataset_title value: {repr(dataset_title)}")
+        import traceback
+        traceback.print_exc()
         return None, None, None, []
 
 def main():
@@ -166,6 +153,13 @@ def main():
     # Filter out pull requests
     open_issues = [issue for issue in open_issues if not issue.pull_request]
     
+    # FOR TESTING: Only check specific range of issues
+    TEST_RANGE = (650, 653)  # Set to None to check all issues
+    if TEST_RANGE:
+        start, end = TEST_RANGE
+        open_issues = [issue for issue in open_issues if start <= issue.number <= end]
+        print(f"TESTING MODE: Only checking issues #{start}-#{end}")
+        
     print(f"Found {len(open_issues)} open issues (excluding PRs)\n")
     
     checked_count = 0
@@ -261,7 +255,6 @@ def main():
 **OBIS URLs:**
 {chr(10).join(f'- {u}' for u in obis_urls)}
 
-Please verify if this is the same dataset or a different dataset with the same name."""
                         issue.create_comment(comment_body)
                         print(f"\n✓ Added warning comment")
                     else:
