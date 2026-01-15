@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: '0 0 * * 0'  # Run weekly on Sundays at midnight UTC
   workflow_dispatch:  # Allow manual triggering
+    inputs:
+      dry_run:
+        description: 'Dry run mode (no changes made)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   check-datasets:
@@ -24,4 +33,5 @@ jobs:
       - name: Run dataset checker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: python check_title_against_obis.py
