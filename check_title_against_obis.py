@@ -255,6 +255,7 @@ def main():
 **OBIS URLs:**
 {chr(10).join(f'- {u}' for u in obis_urls)}
 
+"""
                         issue.create_comment(comment_body)
                         print(f"\n✓ Added warning comment")
                     else:
