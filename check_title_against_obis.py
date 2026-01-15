@@ -286,12 +286,3 @@ Please verify if this is the same dataset or a different dataset with the same n
 
 if __name__ == "__main__":
     main()
-```
-
-The key changes are in the section where matches are found. Now both dry run and real run will print:
-```
-OBIS Dataset: https://obis.org/dataset/[id]
-OBIS URLs found:
-  - [url1]
-  - [url2]
-  - [url3]
