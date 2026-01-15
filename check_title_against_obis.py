@@ -1,6 +1,6 @@
 import os
 import requests
-from github import Github
+from github import Github, Auth
 import time
 import re
 import sys
@@ -150,7 +150,8 @@ def main():
         print("ERROR: GITHUB_TOKEN not found")
         return
     
-    g = Github(github_token)
+    auth = Auth.Token(github_token)
+    g = Github(auth=auth)
     
     # Get the repository
     repo = g.get_repo("iobis/obis-network-datasets")
@@ -204,18 +205,20 @@ def main():
         title_match, url_match, dataset_url, obis_urls = search_obis_dataset(dataset_title, issue_urls)
         
         if title_match is True:
+            print(f"\nOBIS Dataset: {dataset_url}")
+            print(f"OBIS URLs found:")
+            for u in obis_urls:
+                print(f"  - {u}")
+            
             if url_match:
                 # Full match - title and URL
                 full_match_count += 1
                 print(f"\n✓ FULL MATCH: Title and URL match!")
-                print(f"  OBIS Dataset: {dataset_url}")
-                print(f"  OBIS URLs:")
-                for u in obis_urls:
-                    print(f"    - {u}")
                 
                 if DRY_RUN:
-                    print(f"\n  [DRY RUN] Would add comment: 'The dataset is in OBIS: {dataset_url}'")
-                    print(f"  [DRY RUN] Would add label: 'In OBIS'")
+                    print(f"\n[DRY RUN] Would add comment:")
+                    print(f"  'The dataset is in OBIS: {dataset_url}'")
+                    print(f"[DRY RUN] Would add label: 'In OBIS'")
                 else:
                     # Check if we've already commented
                     existing_comments = [c for c in issue.get_comments() 
@@ -224,28 +227,21 @@ def main():
                     if not existing_comments:
                         comment_body = f"The dataset is in OBIS: {dataset_url}"
                         issue.create_comment(comment_body)
-                        print(f"  ✓ Added comment")
+                        print(f"\n✓ Added comment")
                     else:
-                        print(f"  ℹ Already commented")
+                        print(f"\nℹ Already commented")
                     
                     # Add label
                     issue.add_to_labels("In OBIS")
-                    print(f"  ✓ Added 'In OBIS' label")
+                    print(f"✓ Added 'In OBIS' label")
             else:
                 # Title match only - no URL match
                 title_only_match_count += 1
                 print(f"\n⚠ PARTIAL MATCH: Title matches but URLs don't match")
-                print(f"  OBIS Dataset: {dataset_url}")
-                print(f"  Issue URLs:")
-                for u in issue_urls:
-                    print(f"    - {u}")
-                print(f"  OBIS URLs:")
-                for u in obis_urls:
-                    print(f"    - {u}")
                 
                 if DRY_RUN:
-                    print(f"\n  [DRY RUN] Would add comment about title match but no URL match")
-                    print(f"  [DRY RUN] Would NOT add 'In OBIS' label")
+                    print(f"\n[DRY RUN] Would add comment about title match but no URL match")
+                    print(f"[DRY RUN] Would NOT add 'In OBIS' label")
                 else:
                     # Check if we've already commented
                     existing_comments = [c for c in issue.get_comments() 
@@ -264,9 +260,9 @@ def main():
 
 Please verify if this is the same dataset or a different dataset with the same name."""
                         issue.create_comment(comment_body)
-                        print(f"  ✓ Added warning comment")
+                        print(f"\n✓ Added warning comment")
                     else:
-                        print(f"  ℹ Already commented")
+                        print(f"\nℹ Already commented")
         
         elif title_match is False:
             print(f"\n✗ No title match found in OBIS")
@@ -290,3 +286,12 @@ Please verify if this is the same dataset or a different dataset with the same n
 
 if __name__ == "__main__":
     main()
+```
+
+The key changes are in the section where matches are found. Now both dry run and real run will print:
+```
+OBIS Dataset: https://obis.org/dataset/[id]
+OBIS URLs found:
+  - [url1]
+  - [url2]
+  - [url3]
