@@ -79,6 +79,11 @@ def search_obis_dataset(dataset_title, issue_urls):
     Search for a dataset in OBIS using exact title match and URL verification
     Returns: (title_match: bool, url_match: bool, dataset_url: str or None, obis_urls: list)
     """
+    # Ensure dataset_title is a string
+    if not dataset_title or not isinstance(dataset_title, str):
+        print(f"  ERROR: Invalid dataset_title: {type(dataset_title)}")
+        return None, None, None, []
+    
     url = "https://api.obis.org/dataset/search2"
     params = {
         'q': dataset_title,
@@ -92,8 +97,15 @@ def search_obis_dataset(dataset_title, issue_urls):
         
         if data and 'results' in data:
             for result in data['results']:
+                # Get title safely
+                result_title = result.get('title')
+                
+                # Skip if title is not a string
+                if not result_title or not isinstance(result_title, str):
+                    continue
+                
                 # Check for exact title match (case-insensitive)
-                if result.get('title', '').strip().lower() == dataset_title.strip().lower():
+                if result_title.strip().lower() == dataset_title.strip().lower():
                     dataset_id = result.get('id')
                     if dataset_id:
                         dataset_url = f"https://obis.org/dataset/{dataset_id}"
@@ -116,6 +128,8 @@ def search_obis_dataset(dataset_title, issue_urls):
         
     except Exception as e:
         print(f"  Error searching OBIS: {e}")
+        print(f"  dataset_title type: {type(dataset_title)}")
+        print(f"  dataset_title value: {repr(dataset_title)}")
         return None, None, None, []
 
 def main():
