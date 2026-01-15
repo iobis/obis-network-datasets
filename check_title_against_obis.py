@@ -130,6 +130,13 @@ def search_obis_dataset(dataset_title, issue_urls):
                         # Check if URLs match
                         url_match, obis_urls = check_url_match(issue_urls, dataset_info)
                         
+                        # Debug: print what we got from OBIS
+                        print(f"  DEBUG: OBIS dataset info keys: {dataset_info.keys() if dataset_info else 'None'}")
+                        if dataset_info:
+                            print(f"  DEBUG: url={dataset_info.get('url')}")
+                            print(f"  DEBUG: feed={dataset_info.get('feed')}")
+                            print(f"  DEBUG: archive={dataset_info.get('archive')}")
+                        
                         return True, url_match, dataset_url, obis_urls
         
         return False, False, None, []
@@ -206,10 +213,13 @@ def main():
         
         if title_match is True:
             print(f"\nOBIS Dataset: {dataset_url}")
-            print(f"OBIS URLs found:")
-            for u in obis_urls:
-                print(f"  - {u}")
-            
+            print(f"OBIS URLs found ({len(obis_urls)} total):")
+            if obis_urls:
+                for u in obis_urls:
+                    print(f"  - {u}")
+            else:
+                print(f"  (No URLs found in OBIS dataset info)")
+                            
             if url_match:
                 # Full match - title and URL
                 full_match_count += 1
