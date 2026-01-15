@@ -154,7 +154,7 @@ def main():
     open_issues = [issue for issue in open_issues if not issue.pull_request]
     
     # FOR TESTING: Only check specific range of issues
-    TEST_RANGE = (650, 653)  # Set to None to check all issues
+    TEST_RANGE = None  # Set to None to check all issues
     if TEST_RANGE:
         start, end = TEST_RANGE
         open_issues = [issue for issue in open_issues if start <= issue.number <= end]
