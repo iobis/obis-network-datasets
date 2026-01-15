@@ -33,5 +33,5 @@ jobs:
       - name: Run dataset checker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
         run: python check_title_against_obis.py
