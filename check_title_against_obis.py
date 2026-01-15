@@ -29,39 +29,13 @@ def extract_urls_from_issue(issue_body):
     
     return list(set(urls))  # Remove duplicates
 
-def get_obis_dataset_info(dataset_id):
+def check_url_match_simple(issue_urls, obis_urls):
     """
-    Get full dataset information from OBIS API
+    Check if any URLs from the issue match the OBIS URLs
+    Returns: bool
     """
-    url = f"https://api.obis.org/dataset/{dataset_id}"
-    
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print(f"  Error fetching dataset info: {e}")
-        return None
-
-def check_url_match(issue_urls, obis_dataset_info):
-    """
-    Check if any URLs from the issue match the OBIS dataset's URLs
-    Returns: (match: bool, obis_urls: list)
-    """
-    if not obis_dataset_info:
-        return False, []
-    
-    # Get OBIS dataset URLs
-    obis_urls = []
-    
-    if 'url' in obis_dataset_info and obis_dataset_info['url']:
-        obis_urls.append(obis_dataset_info['url'])
-    
-    if 'feed' in obis_dataset_info and obis_dataset_info['feed']:
-        obis_urls.append(obis_dataset_info['feed'])
-    
-    if 'archive' in obis_dataset_info and obis_dataset_info['archive']:
-        obis_urls.append(obis_dataset_info['archive'])
+    if not obis_urls:
+        return False
     
     # Normalize URLs for comparison
     def normalize_url(url):
@@ -83,11 +57,11 @@ def check_url_match(issue_urls, obis_dataset_info):
         for obis_url in normalized_obis_urls:
             # Exact match (ignoring protocol)
             if issue_url == obis_url:
-                return True, obis_urls
+                return True
             
             # One contains the other (for partial URLs)
             if issue_url in obis_url or obis_url in issue_url:
-                return True, obis_urls
+                return True
     
     # Also check if they share the same IPT resource ID
     for issue_url in issue_urls:
@@ -96,9 +70,9 @@ def check_url_match(issue_urls, obis_dataset_info):
             for obis_url in obis_urls:
                 obis_resource = extract_resource_id(obis_url)
                 if obis_resource and issue_resource.lower() == obis_resource.lower():
-                    return True, obis_urls
+                    return True
     
-    return False, obis_urls
+    return False
 
 def search_obis_dataset(dataset_title, issue_urls):
     """
@@ -124,18 +98,17 @@ def search_obis_dataset(dataset_title, issue_urls):
                     if dataset_id:
                         dataset_url = f"https://obis.org/dataset/{dataset_id}"
                         
-                        # Get full dataset info to check URLs
-                        dataset_info = get_obis_dataset_info(dataset_id)
+                        # Get URLs directly from the search result
+                        obis_urls = []
+                        if result.get('url'):
+                            obis_urls.append(result['url'])
+                        if result.get('feed'):
+                            obis_urls.append(result['feed'])
+                        if result.get('archive'):
+                            obis_urls.append(result['archive'])
                         
                         # Check if URLs match
-                        url_match, obis_urls = check_url_match(issue_urls, dataset_info)
-                        
-                        # Debug: print what we got from OBIS
-                        print(f"  DEBUG: OBIS dataset info keys: {dataset_info.keys() if dataset_info else 'None'}")
-                        if dataset_info:
-                            print(f"  DEBUG: url={dataset_info.get('url')}")
-                            print(f"  DEBUG: feed={dataset_info.get('feed')}")
-                            print(f"  DEBUG: archive={dataset_info.get('archive')}")
+                        url_match = check_url_match_simple(issue_urls, obis_urls)
                         
                         return True, url_match, dataset_url, obis_urls
         
@@ -227,15 +200,16 @@ def main():
                 
                 if DRY_RUN:
                     print(f"\n[DRY RUN] Would add comment:")
-                    print(f"  'The dataset is in OBIS: {dataset_url}'")
+                    print(f"  'Dataset is published to OBIS: {dataset_url}'")
                     print(f"[DRY RUN] Would add label: 'In OBIS'")
+                    print(f"[DRY RUN] Would close issue")
                 else:
                     # Check if we've already commented
                     existing_comments = [c for c in issue.get_comments() 
-                                       if 'The dataset is in OBIS:' in c.body]
+                                       if 'Dataset is published to OBIS:' in c.body]
                     
                     if not existing_comments:
-                        comment_body = f"The dataset is in OBIS: {dataset_url}"
+                        comment_body = f"Dataset is published to OBIS: {dataset_url}"
                         issue.create_comment(comment_body)
                         print(f"\n✓ Added comment")
                     else:
@@ -244,6 +218,10 @@ def main():
                     # Add label
                     issue.add_to_labels("In OBIS")
                     print(f"✓ Added 'In OBIS' label")
+                    
+                    # Close the issue
+                    issue.edit(state='closed')
+                    print(f"✓ Closed issue")
             else:
                 # Title match only - no URL match
                 title_only_match_count += 1
@@ -252,6 +230,7 @@ def main():
                 if DRY_RUN:
                     print(f"\n[DRY RUN] Would add comment about title match but no URL match")
                     print(f"[DRY RUN] Would NOT add 'In OBIS' label")
+                    print(f"[DRY RUN] Would NOT close issue")
                 else:
                     # Check if we've already commented
                     existing_comments = [c for c in issue.get_comments() 
