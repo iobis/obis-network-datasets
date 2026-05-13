@@ -2,10 +2,12 @@
 
 ## Overview
 
-<a href="https://www.youtube.com/watch?v=4U1mjvCpC6s">
-  <img src="https://img.youtube.com/vi/4U1mjvCpC6s/hqdefault.jpg" width="400" alt="Watch the overview video"><br>
-  ▶ Watch the overview video
-</a>
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=4U1mjvCpC6s">
+    <img src="https://img.youtube.com/vi/4U1mjvCpC6s/hqdefault.jpg" width="400" alt="Watch the overview video"><br>
+    ▶ Watch the overview video
+  </a>
+</p>
 
 ## What is this repository?
 
@@ -18,6 +20,18 @@ To address this, the OBIS Secretariat created this repository to track marine da
 In November 2021, GBIF released **IPT version 2.5.2**, which introduced the ability for publishers to link datasets to networks such as OBIS. Datasets marked with the OBIS network tag automatically appear on the [OBIS network page in GBIF](https://www.gbif.org/network/2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6). However, not all of these datasets were flowing into OBIS.
 
 To close this gap, the OBIS Secretariat developed a Python package that uses the GBIF API to detect "missing" datasets and create GitHub issues for nodes to review.
+
+## Producer
+
+The producer is the core of this repository: a scheduled job that scans the GBIF OBIS network for datasets not yet in OBIS and files a GitHub issue for each one.
+
+**What it does:**
+- Pulls every dataset GBIF lists under the OBIS network
+- Compares each one against OBIS (by source URL, archive URL, and the OBIS blacklist)
+- Skips datasets that are already in OBIS, orphaned at GBIF, or already have an open issue
+- For everything that's left, opens a new issue containing the title, GBIF URL, DOI, and DwC-A archive endpoint
+
+**Schedule:** Runs automatically every 6 hours via GitHub Actions.
 
 ## Workflow
 
@@ -58,47 +72,21 @@ To view all open issues **not currently assigned to a node**, use [this filter](
 
 ## Issue checker
 
-A GitHub Action that runs weekly to check whether datasets in open issues already exist in OBIS.
+A separate scheduled job that revisits open issues to catch datasets that have been published to OBIS since the issue was filed.
 
 **What it does:**
-- Scans open issues for dataset titles and URLs
-- Queries the OBIS API for an exact title match
+- Walks every open issue
+- Searches OBIS for an exact title match
 - Compares source URLs between the issue and OBIS
 - If the issue's URLs don't match OBIS but the issue references a GBIF dataset, cross-checks the GBIF identifiers (DOI, DwC-A endpoint) against the OBIS source URLs
 
 **Results:**
-- **Exact match (title + URL)**: Adds "In OBIS" label, comments with OBIS link, and closes the issue
-- **Title match only**: Adds a warning comment showing URL mismatch (issue stays open)
+- **Exact match (title + URL)**: Adds "In OBIS" label, comments with the OBIS link, and closes the issue
+- **Title match only**: Adds a warning comment showing the URL mismatch (issue stays open)
 - **No match**: No action taken
 
-**Schedule:** Runs automatically every Sunday at midnight UTC, or can be triggered manually via the Actions tab.
+**Schedule:** Runs automatically every Sunday at midnight UTC.
 
-## Running the tools
+## How it runs
 
-This repository ships as a Python package with two entry points: the **producer**, which creates new issues for GBIF datasets that aren't in OBIS, and the **issue checker**, which closes issues for datasets that have since been published to OBIS.
-
-### Setup
-
-Create a `.env` file with a `GITHUB_TOKEN` environment variable (a GitHub personal access token with `repo` scope). Install the package:
-
-```bash
-pip install -e .
-```
-
-### Producer
-
-Creates new issues for GBIF-tagged OBIS-network datasets that aren't yet in OBIS:
-
-```bash
-python -m obisnd
-```
-
-### Issue checker
-
-Walks open issues and closes any that are now in OBIS. Supports `--dry-run` to log intended actions without making changes:
-
-```bash
-python -m obisnd.issue_checker --dry-run
-```
-
-Other options: `--issue-range START END`, `--issues N N N`, `--repo owner/name`. When run as a GitHub Action, the token is provided automatically.
+Both jobs run as GitHub Actions on a schedule; no local setup is needed for normal operation. The workflows live in [`.github/workflows/`](.github/workflows/). Either can also be triggered manually from the Actions tab.
