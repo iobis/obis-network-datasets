@@ -16,7 +16,17 @@ class ObisNetworkDatasets:
 
         self.github_issues = get_github_issues()
         self.gbif_datasets = get_obis_network_datasets()
-        self.obis_datasets = [dataset["url"].replace("https://", "http://") for dataset in obis_datasets if dataset["url"] is not None]
+
+        # Collect both the resource page URL ("url") and the DwC-A archive
+        # URL ("archive") from OBIS, so dedup works against either form.
+        obis_urls = []
+        for dataset in obis_datasets:
+            if dataset.get("url") is not None:
+                obis_urls.append(dataset["url"].replace("https://", "http://"))
+            if dataset.get("archive") is not None:
+                obis_urls.append(dataset["archive"].replace("https://", "http://"))
+        self.obis_datasets = obis_urls
+
         self.obis_blacklist = [dataset["url"].replace("https://", "http://") for dataset in get_obis_blacklist() if dataset["url"] is not None]
         self.obis_titles = [dataset["title"] for dataset in obis_datasets if dataset["title"] is not None]
 
@@ -69,6 +79,14 @@ class ObisNetworkDatasets:
                 doi_url = self.normalize_identifier(gbif_dataset["doi"])
                 if doi_url not in identifiers:
                     identifiers.append(doi_url)
+
+            # Add DwC-A archive endpoint URL(s) from GBIF. GBIF no longer
+            # auto-populates these into the dataset's "identifiers" array,
+            # so pull them directly from "endpoints".
+            for endpoint in gbif_dataset["endpoints"]:
+                if endpoint.get("type") == "DWC_ARCHIVE" and endpoint.get("url") is not None:
+                    if endpoint["url"] not in identifiers:
+                        identifiers.append(endpoint["url"])
 
             if not self.dataset_has_dwc_endpoint(gbif_dataset):
                 logger.info(colored(f"No IPT URL found for {gbif_url}", "red"))
