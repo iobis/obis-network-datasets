@@ -26,7 +26,7 @@ To close this gap, the OBIS Secretariat developed a Python package that uses the
 The issue creator is the core of this repository: a scheduled job that scans the GBIF OBIS network for datasets not yet in OBIS and files a GitHub issue for each one.
 
 **What it does:**
-- Pulls every dataset GBIF lists under the OBIS network
+- Pulls metadata for every dataset GBIF lists under the OBIS network
 - Compares each one against OBIS (by source URL, archive URL, and the OBIS blacklist)
 - Skips datasets that are already in OBIS, orphaned at GBIF, or already have an open issue
 - For everything that's left, opens a new issue containing the title, GBIF URL, DOI, and DwC-A archive endpoint
@@ -41,11 +41,6 @@ The issue creator is the core of this repository: a scheduled job that scans the
   - Endorse appropriate datasets.
   - Coordinate with publishers to resolve any quality concerns.
 - Once endorsed, the OBIS Secretariat harvests the dataset directly from the source IPT and lists it on the endorsing node's OBIS page.
-
-This process ensures that:
-- The **same, best-quality "master copy"** of each dataset flows to both GBIF and OBIS.
-- **Duplicate records are avoided**.
-- OBIS is **recognized within GBIF as the global marine biodiversity network**.
 
 All OBIS node managers and data managers are encouraged to **watch this repository** and stay engaged in reviewing and endorsing new datasets.
 
