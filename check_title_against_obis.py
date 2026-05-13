@@ -274,8 +274,8 @@ def search_obis_dataset(dataset_title, issue_urls):
             url_match (bool): True if any issue URL matches an OBIS URL.
             dataset_url (str or None): obis.org URL for the matched dataset.
             obis_urls (list[str]): Source URLs reported by OBIS for the
-                matched dataset (drawn from 'url', 'feed', and 'archive'
-                fields of the search result).
+                matched dataset (drawn from 'url' and 'archive' fields of
+                the search result).
     """
     if not dataset_title or not isinstance(dataset_title, str):
         print(f"  ERROR: Invalid dataset_title: {type(dataset_title)}")
@@ -302,7 +302,7 @@ def search_obis_dataset(dataset_title, issue_urls):
                         dataset_url = f"https://obis.org/dataset/{dataset_id}"
 
                         obis_urls = []
-                        for field in ('url', 'feed', 'archive'):
+                        for field in ('url', 'archive'):
                             value = result.get(field)
                             if value and isinstance(value, str):
                                 obis_urls.append(value)
