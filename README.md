@@ -21,9 +21,9 @@ In November 2021, GBIF released **IPT version 2.5.2**, which introduced the abil
 
 To close this gap, the OBIS Secretariat developed a Python package that uses the GBIF API to detect "missing" datasets and create GitHub issues for nodes to review.
 
-## Producer
+## Issue creator
 
-The producer is the core of this repository: a scheduled job that scans the GBIF OBIS network for datasets not yet in OBIS and files a GitHub issue for each one.
+The issue creator is the core of this repository: a scheduled job that scans the GBIF OBIS network for datasets not yet in OBIS and files a GitHub issue for each one.
 
 **What it does:**
 - Pulls every dataset GBIF lists under the OBIS network
