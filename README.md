@@ -76,7 +76,7 @@ This repository ships as a Python package with two entry points: the **producer*
 
 ### Setup
 
-Create a `.env` file with environment variables `GITHUB_USER` and `GITHUB_ACCESS_TOKEN`. Install the package:
+Create a `.env` file with a `GITHUB_TOKEN` environment variable (a GitHub personal access token with `repo` scope). Install the package:
 
 ```bash
 pip install -e .
@@ -98,4 +98,4 @@ Walks open issues and closes any that are now in OBIS. Supports `--dry-run` to l
 python -m obisnd.issue_checker --dry-run
 ```
 
-Other options: `--issue-range START END`, `--issues N N N`, `--repo owner/name`. The issue checker uses the `GITHUB_TOKEN` environment variable (separate from the producer's `GITHUB_ACCESS_TOKEN`). When run as a GitHub Action, both are provided automatically.
+Other options: `--issue-range START END`, `--issues N N N`, `--repo owner/name`. When run as a GitHub Action, the token is provided automatically.
