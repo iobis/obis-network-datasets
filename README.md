@@ -2,7 +2,10 @@
 
 ## Overview
 
-[![Watch the overview video](https://img.youtube.com/vi/4U1mjvCpC6s/maxresdefault.jpg)](https://www.youtube.com/watch?v=4U1mjvCpC6s)
+<a href="https://www.youtube.com/watch?v=4U1mjvCpC6s">
+  <img src="https://img.youtube.com/vi/4U1mjvCpC6s/hqdefault.jpg" width="400" alt="Watch the overview video"><br>
+  ▶ Watch the overview video
+</a>
 
 ## What is this repository?
 
