@@ -1,4 +1,4 @@
-name: Check Title Against OBIS
+name: Check issues against OBIS
 
 on:
   schedule:
@@ -20,18 +20,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
-      - name: Install dependencies
+
+      - name: Install package
         run: |
-          pip install requests PyGithub
-      
-      - name: Run dataset checker
+          python -m pip install -e .
+
+      - name: Run issue checker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
-        run: python check_title_against_obis.py
+        run: python -m obisnd.issue_checker

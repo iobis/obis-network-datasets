@@ -3,6 +3,7 @@ Local dry-run check for a single GBIF dataset.
 
 Usage:
     python check_one.py 3f8c5321-4081-46fc-84ef-27c12735c3a5
+    python check_one.py 3f8c5321-4081-46fc-84ef-27c12735c3a5 --show-body
 
 Fetches the dataset from GBIF, runs the same identifier-building and
 OBIS/GitHub-dedup logic that ObisNetworkDatasets.run() uses, and prints
@@ -15,7 +16,7 @@ import requests
 import yaml
 
 from obisnd import ObisNetworkDatasets
-from obisnd.gbif import create_gbif_url
+from obisnd.gbif import create_gbif_url, collect_identifiers
 
 
 def fetch_one_gbif_dataset(dataset_uuid):
@@ -38,16 +39,7 @@ def main():
     print("Loading OBIS datasets, blacklist, and existing GitHub issues (this takes a minute) ...")
     ond = ObisNetworkDatasets()
 
-    # Replicate the identifier-building logic from run() exactly.
-    identifiers = [i["identifier"] for i in gbif_dataset["identifiers"]]
-    if gbif_dataset.get("doi") is not None:
-        doi_url = ond.normalize_identifier(gbif_dataset["doi"])
-        if doi_url not in identifiers:
-            identifiers.append(doi_url)
-    for endpoint in gbif_dataset.get("endpoints", []):
-        if endpoint.get("type") == "DWC_ARCHIVE" and endpoint.get("url") is not None:
-            if endpoint["url"] not in identifiers:
-                identifiers.append(endpoint["url"])
+    identifiers = collect_identifiers(gbif_dataset)
 
     print("\n=== Identifiers that would be checked / written ===")
     for i in identifiers:
