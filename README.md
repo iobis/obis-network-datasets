@@ -1,79 +1,87 @@
 # obis-network-datasets
 
-## What is this repository?  
+## Overview
 
-As reported at the 10th meeting of the IODE Steering Group for OBIS (SG-OBIS-10) [Document link, see Section 3.1, pgs 39–40](https://oceanexpert.org/document/30481), OBIS and GBIF both host large volumes of marine biodiversity data. However, this overlap can lead to duplication and confusion for users.  
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=4U1mjvCpC6s">
+    <img src="https://img.youtube.com/vi/4U1mjvCpC6s/hqdefault.jpg" width="400" alt="Watch the overview video"><br>
+    ▶ Watch the overview video
+  </a>
+</p>
 
-To address this, the OBIS Secretariat created this repository to track marine datasets that are **tagged in GBIF as part of the OBIS network** but are **not yet available in OBIS**. Each dataset is represented as a GitHub issue so that OBIS nodes can review and endorse them.  
+## What is this repository?
 
-## History  
+As reported at the 10th meeting of the IODE Steering Group for OBIS (SG-OBIS-10) [Document link, see Section 3.1, pgs 39–40](https://oceanexpert.org/document/30481), OBIS and GBIF both host large volumes of marine biodiversity data. However, this overlap can lead to duplication and confusion for users.
 
-In November 2021, GBIF released **IPT version 2.5.2**, which introduced the ability for publishers to link datasets to networks such as OBIS. Datasets marked with the OBIS network tag automatically appear on the [OBIS network page in GBIF](https://www.gbif.org/network/2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6). However, not all of these datasets were flowing into OBIS.  
+To address this, the OBIS Secretariat created this repository to track marine datasets that are **tagged in GBIF as part of the OBIS network** but are **not yet available in OBIS**. Each dataset is represented as a GitHub issue so that OBIS nodes can review and endorse them.
 
-To close this gap, the OBIS Secretariat developed a Python package that uses the GBIF API to detect “missing” datasets and create GitHub issues for nodes to review.  
+## History
 
-## Workflow  
+In November 2021, GBIF released **IPT version 2.5.2**, which introduced the ability for publishers to link datasets to networks such as OBIS. Datasets marked with the OBIS network tag automatically appear on the [OBIS network page in GBIF](https://www.gbif.org/network/2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6). However, not all of these datasets were flowing into OBIS.
 
-- Each dataset appears here as an issue.  
-- OBIS nodes are expected to:  
-  - Monitor these issues.  
-  - Endorse appropriate datasets.  
-  - Coordinate with publishers to resolve any quality concerns.  
-- Once endorsed, the OBIS Secretariat harvests the dataset directly from the source IPT and lists it on the endorsing node’s OBIS page.  
+To close this gap, the OBIS Secretariat developed a Python package that uses the GBIF API to detect "missing" datasets and create GitHub issues for nodes to review.
 
-This process ensures that:  
-- The **same, best-quality “master copy”** of each dataset flows to both GBIF and OBIS.  
-- **Duplicate records are avoided**.  
-- OBIS is **recognized within GBIF as the global marine biodiversity network**.  
+## Issue creator
 
-All OBIS node managers and data managers are encouraged to **watch this repository** and stay engaged in reviewing and endorsing new datasets.  
-
-## Assignments  
-
-GitHub accounts per OBIS node used to assign datasets:  
-
-- AntOBIS: @ymgan  
-- IndOBIS: @johnny3125  
-- Caribbean OBIS: @diodon, @cperaltab  
-- OBIS Japan: @hosonot  
-- EurOBIS: @cyrilrader  
-- OBIS Australia: @obisau  
-- OBIS Deepsea: @haniehsaeedi  
-- AfrOBIS: @TRasehlomi  
-- OBIS China: @ZhaocuiMeng  
-- OBIS Canada: @cornthwaitem  
-- OBIS Ecuador: @vechocho, @gbif-ec  
-- OBIS UK: @dblear  
-- Ocean Tracking Network: @jdpye
-- OBIS Canada: @cornthwaitem
-- OBIS Brazil: @ClaraBaringoFonseca
-
-To view all open issues **not currently assigned to a node**, use [this filter](https://github.com/iobis/obis-network-datasets/issues?q=is%3Aissue%20state%3Aopen%20no%3Aassignee%20label%3Adataset%20-label%3A%22node%3A%20OBIS%20China%22%20-label%3A%22node%3A%20OBIS%20SEAMAP%22%20-label%3A%22node%3A%20OBIS%20Colombia%22%20-label%3A%22node%3A%20OBIS%20Malaysia%22%20-label%3A%22node%3A%20OBIS%20Deep%20Sea%22%20-label%3A%22node%3A%20OBIS%20Brazil%22%20-label%3A%22node%3A%20OBIS%20Argentina%22%20-label%3A%22node%3A%20OBIS%20Australia%22%20-label%3A%22node%3A%20ESP%20OBIS%22%20-label%3A%22node%3A%20OBIS%20Black%20Sea%22%20-label%3A%22node%3A%20Caribbean%20OBIS%22%20-label%3A%22node%3A%20AfroOBIS%22%20-label%3A%22node%3A%20EurOBIS%22%20-label%3A%22node%3A%20OBIS%20CPPS%22%20-label%3A%22node%3A%20OBIS%20Ecuador%22%20-label%3A%22node%3A%20OBIS%20Norway%22%20-label%3A%22node%3A%20OBIS%20UK%22%20-label%3A%22node%3A%20OBIS%20USA%22%20-label%3A%22node%3A%20SWP%20OBIS%22%20-label%3A%22node%3A%20PEGO-OBIS%22%20-label%3A%22node%3A%20OBIS%20Canada%22).  
-
-## Automated checking for publication
-
-To help keep the repo up-to-date, a GitHub Action that runs weekly to check if datasets in open issues already exist in OBIS.
+The issue creator is the core of this repository: a scheduled job that scans the GBIF OBIS network for datasets not yet in OBIS and files a GitHub issue for each one.
 
 **What it does:**
-- Scans open issues for dataset titles and URLs
-- Queries the OBIS API for exact title matches
+- Pulls metadata for every dataset GBIF lists under the OBIS network
+- Compares each one against OBIS (by source URL, archive URL, and the OBIS blacklist)
+- Skips datasets that are already in OBIS, orphaned at GBIF, or already have an open issue
+- For everything that's left, opens a new issue containing the title, GBIF URL, DOI, and DwC-A archive endpoint
+
+**Schedule:** Runs automatically every 6 hours via GitHub Actions.
+
+## Workflow
+
+- Each dataset appears here as an issue.
+- OBIS nodes are expected to:
+  - Monitor these issues.
+  - Endorse appropriate datasets.
+  - Coordinate with publishers to resolve any quality concerns.
+- Once endorsed, the OBIS Secretariat harvests the dataset directly from the source IPT and lists it on the endorsing node's OBIS page.
+
+All OBIS node managers and data managers are encouraged to **watch this repository** and stay engaged in reviewing and endorsing new datasets.
+
+## Assignments
+
+GitHub accounts per OBIS node used to assign datasets:
+
+- AntOBIS: @ymgan
+- IndOBIS: @johnny3125
+- Caribbean OBIS: @diodon, @cperaltab
+- OBIS Japan: @hosonot
+- EurOBIS: @cyrilrader
+- OBIS Australia: @obisau
+- OBIS Deepsea: @haniehsaeedi
+- AfrOBIS: @TRasehlomi
+- OBIS China: @ZhaocuiMeng
+- OBIS Canada: @cornthwaitem
+- OBIS Ecuador: @vechocho, @gbif-ec
+- OBIS UK: @dblear
+- Ocean Tracking Network: @jdpye
+- OBIS Brazil: @ClaraBaringoFonseca
+
+To view all open issues **not currently assigned to a node**, use [this filter](https://github.com/iobis/obis-network-datasets/issues?q=is%3Aissue%20state%3Aopen%20no%3Aassignee%20label%3Adataset%20-label%3A%22node%3A%20OBIS%20China%22%20-label%3A%22node%3A%20OBIS%20SEAMAP%22%20-label%3A%22node%3A%20OBIS%20Colombia%22%20-label%3A%22node%3A%20OBIS%20Malaysia%22%20-label%3A%22node%3A%20OBIS%20Deep%20Sea%22%20-label%3A%22node%3A%20OBIS%20Brazil%22%20-label%3A%22node%3A%20OBIS%20Argentina%22%20-label%3A%22node%3A%20OBIS%20Australia%22%20-label%3A%22node%3A%20ESP%20OBIS%22%20-label%3A%22node%3A%20OBIS%20Black%20Sea%22%20-label%3A%22node%3A%20Caribbean%20OBIS%22%20-label%3A%22node%3A%20AfroOBIS%22%20-label%3A%22node%3A%20EurOBIS%22%20-label%3A%22node%3A%20OBIS%20CPPS%22%20-label%3A%22node%3A%20OBIS%20Ecuador%22%20-label%3A%22node%3A%20OBIS%20Norway%22%20-label%3A%22node%3A%20OBIS%20UK%22%20-label%3A%22node%3A%20OBIS%20USA%22%20-label%3A%22node%3A%20SWP%20OBIS%22%20-label%3A%22node%3A%20PEGO-OBIS%22%20-label%3A%22node%3A%20OBIS%20Canada%22).
+
+## Issue checker
+
+A separate scheduled job that revisits open issues to catch datasets that have been published to OBIS since the issue was filed.
+
+**What it does:**
+- Walks every open issue
+- Searches OBIS for an exact title match
 - Compares source URLs between the issue and OBIS
+- If the issue's URLs don't match OBIS but the issue references a GBIF dataset, cross-checks the GBIF identifiers (DOI, DwC-A endpoint) against the OBIS source URLs
 
 **Results:**
-- **Exact match (title + URL)**: Adds "In OBIS" label, comments with OBIS link, and closes the issue
-- **Title match only**: Adds a warning comment showing URL mismatch (issue stays open)
+- **Exact match (title + URL)**: Adds "In OBIS" label, comments with the OBIS link, and closes the issue
+- **Title match only**: Adds a warning comment showing the URL mismatch (issue stays open)
 - **No match**: No action taken
 
-**Schedule:** Runs automatically every Sunday at midnight UTC, or can be triggered manually via the Actions tab.
+**Schedule:** Runs automatically every Sunday at midnight UTC.
 
-## Python Package  
+## How it runs
 
-This repository also includes the Python package that creates issues for datasets linked to the OBIS network in the GBIF registry.  
-
-### Run  
-
-1. Create a `.env` file with environment variables `GITHUB_USER` and `GITHUB_ACCESS_TOKEN`.  
-2. Run:  
-
-   ```bash
-   python -m obisnd
+Both jobs run as GitHub Actions on a schedule; no local setup is needed for normal operation. The workflows live in [`.github/workflows/`](.github/workflows/). Either can also be triggered manually from the Actions tab.
